@@ -20,18 +20,20 @@ class InstituteResource extends Resource
   protected static ?string $model = Institute::class;
 
   protected static ?string $navigationIcon = 'heroicon-o-building-office';
+  protected static ?string $navigationGroup = 'Data Master';
 
   public static function form(Form $form): Form
   {
     return $form
       ->schema([
-        Section::make('Formulir Instansi/Lembaga')
-          ->description('User dari instansi/lembaga merupakan kontributor data artikel')
+        Section::make('Formulir Instansi')
+          ->description('User dari instansi merupakan kontributor data artikel')
           ->schema([
             TextInput::make('name')
-              ->label('Nama Instansi/Lembaga')
+              ->unique()
+              ->label('Nama Instansi')
               ->live(onBlur: true)
-              ->afterStateUpdated(fn (Set $set, ?string $state) => $set('slug', Str::slug($state)))->placeholder('Nama instansi/lembaga')->required()->autocomplete(false),
+              ->afterStateUpdated(fn (Set $set, ?string $state) => $set('slug', Str::slug($state)))->placeholder('Nama instansi')->required()->autocomplete(false),
             TextInput::make('slug')->required(),
             Textarea::make('description')->label('Keterangan')
           ])
