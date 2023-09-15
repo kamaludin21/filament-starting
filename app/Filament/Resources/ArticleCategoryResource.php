@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ArticleCategoryResource\Pages;
-use App\Filament\Resources\ArticleCategoryResource\RelationManagers;
 use App\Models\ArticleCategory;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
@@ -24,6 +23,7 @@ class ArticleCategoryResource extends Resource
   protected static ?string $model = ArticleCategory::class;
 
   protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+  protected static ?string $navigationGroup = 'Data Master';
 
   public static function form(Form $form): Form
   {
@@ -33,6 +33,7 @@ class ArticleCategoryResource extends Resource
           ->description('Data kategori untuk artikel')
           ->schema([
             TextInput::make('name')
+              ->unique()
               ->label('Nama Kategori')
               ->live(onBlur: true)
               ->afterStateUpdated(fn (Set $set, ?string $state) => $set('slug', Str::slug($state)))->placeholder('Nama Kategori')->required()->autocomplete(false),
