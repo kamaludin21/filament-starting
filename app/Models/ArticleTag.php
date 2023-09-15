@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Tag extends Model
+class ArticleTag extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'slug', 'name', 'is_muted'
+      'tag_id',
+      'article_id'
     ];
 }

@@ -21,6 +21,7 @@ class TagResource extends Resource
   protected static ?string $model = Tag::class;
 
   protected static ?string $navigationIcon = 'heroicon-o-tag';
+  protected static ?string $navigationGroup = 'Data Master';
 
   public static function form(Form $form): Form
   {
@@ -30,9 +31,11 @@ class TagResource extends Resource
           ->description('Data tag pada artikel berita')
           ->schema([
             TextInput::make('name')
-              ->label('Nama tag')
+              ->unique()
+              ->label('Suku kata')
+              ->helperText('Max: 30 Karakter')
               ->live(onBlur: true)
-              ->afterStateUpdated(fn (Set $set, ?string $state) => $set('slug', Str::slug($state)))->placeholder('Nama instansi/lembaga')->required()->autocomplete(false),
+              ->afterStateUpdated(fn (Set $set, ?string $state) => $set('slug', Str::slug($state)))->placeholder('Suku kata')->required()->autocomplete(false),
             TextInput::make('slug')->required(),
             Radio::make('is_muted')
               ->label('Sembunyikan kata tag ini?')
@@ -46,7 +49,7 @@ class TagResource extends Resource
     return $table
       ->columns([
         TextColumn::make('name')->sortable()->label('Tag'),
-        ToggleColumn::make('is_muted')->label('Sembunyikan'),
+        ToggleColumn::make('is_muted')->label('Is Mute'),
         TextColumn::make('created_at')->date()
       ])
       ->filters([

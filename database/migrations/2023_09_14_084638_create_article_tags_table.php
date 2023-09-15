@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Tag;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -11,11 +12,10 @@ return new class extends Migration
    */
   public function up(): void
   {
-    Schema::create('tags', function (Blueprint $table) {
+    Schema::create('article_tags', function (Blueprint $table) {
       $table->id();
-      $table->string('slug');
-      $table->string('name', 30)->unique();
-      $table->boolean('is_muted')->default(false);
+      $table->foreignIdFor(Tag::class)->constrained();
+      $table->foreignId('article_id');
       $table->timestamps();
       $table->softDeletes();
     });
@@ -26,6 +26,6 @@ return new class extends Migration
    */
   public function down(): void
   {
-    Schema::dropIfExists('tags');
+    Schema::dropIfExists('article_tags');
   }
 };
