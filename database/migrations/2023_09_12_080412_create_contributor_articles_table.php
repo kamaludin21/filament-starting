@@ -23,10 +23,11 @@ return new class extends Migration
       $table->foreignIdFor(MainArticle::class)
         ->nullable()
         ->constrained();
-      $table->string('slug', 275);
-      $table->string('title', 250);
+        $table->string('title', 250);
+        $table->string('slug')->unique();
       $table->longText('content', 5000);
       $table->string('thumbnail');
+      $table->string('thumbnail_alt', 100);
       $table->json('images')->nullable();
       $table->enum('edited_status', [
         'drafted',

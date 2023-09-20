@@ -13,8 +13,8 @@ return new class extends Migration
   {
     Schema::create('tags', function (Blueprint $table) {
       $table->id();
-      $table->string('slug');
-      $table->string('name', 30)->unique();
+      $table->string('name', 30);
+      $table->string('slug')->unique();
       $table->boolean('is_muted')->default(false);
       $table->timestamps();
       $table->softDeletes();

@@ -20,12 +20,11 @@ return new class extends Migration
         ->constrained();
       $table->foreignIdFor(ArticleCategory::class)
         ->constrained();
-      $table->foreignIdFor(Published::class)
-        ->constrained();
-      $table->string('slug', 275);
       $table->string('title', 250);
-      $table->longText('content', 5000);
+      $table->string('slug')->unique();
+      $table->text('content', 5000);
       $table->string('thumbnail');
+      $table->string('thumbnail_alt', 100);
       $table->json('images')->nullable();
       $table->timestamps();
       $table->softDeletes();

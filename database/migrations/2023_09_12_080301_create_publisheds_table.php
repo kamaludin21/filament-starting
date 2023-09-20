@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\MainArticle;
 use App\Models\Stakeholder;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -15,6 +16,9 @@ return new class extends Migration
     Schema::create('publisheds', function (Blueprint $table) {
       $table->id();
       $table->foreignIdFor(Stakeholder::class)->constrained();
+      $table->foreignIdFor(MainArticle::class)
+        ->constrained()
+        ->cascadeOnDelete();
       $table->enum('publish_status', [
         'queue',
         'preview',
@@ -25,9 +29,9 @@ return new class extends Migration
       $table->enum('edited_status', [
         'drafted',
         'completed',
-        'published',
         'archived'
       ]);
+      $table->json('edited_history');
       $table->timestamps();
       $table->softDeletes();
     });

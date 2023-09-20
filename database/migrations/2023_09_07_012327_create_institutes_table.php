@@ -13,8 +13,8 @@ return new class extends Migration
   {
     Schema::create('institutes', function (Blueprint $table) {
       $table->id();
-      $table->string('slug');
-      $table->string('name')->unique();
+      $table->string('name');
+      $table->string('slug')->unique();
       $table->longText('description')->nullable();
       $table->timestamps();
       $table->softDeletes();
