@@ -36,7 +36,7 @@ class TagResource extends Resource
               ->helperText('Max: 30 Karakter')
               ->live(onBlur: true)
               ->afterStateUpdated(fn (Set $set, ?string $state) => $set('slug', Str::slug($state)))->placeholder('Suku kata')->required()->autocomplete(false),
-            TextInput::make('slug')->required(),
+            TextInput::make('slug')->readOnly()->required(),
             Radio::make('is_muted')
               ->label('Sembunyikan kata tag ini?')
               ->boolean()->default(false)

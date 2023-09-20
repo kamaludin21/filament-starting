@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MainArticle extends Model
@@ -13,41 +15,46 @@ class MainArticle extends Model
   protected $fillable = [
     'stakeholder_id',
     'article_category_id',
-    'published_id',
-    'slug',
     'title',
+    'slug',
     'content',
     'thumbnail',
-    'images',
+    'thumbnail_alt',
+    'images'
   ];
 
-  protected $guarded = [
-    'edited_status'
+  protected $casts = [
+    'images' => 'array'
   ];
 
-  public function stakeholder()
+  public function stakeholder(): HasOne
   {
     return $this->hasOne(Stakeholder::class);
   }
 
-  public function articleCategory()
+  public function articleCategory(): HasOne
   {
     return $this->hasOne(ArticleCategory::class);
   }
 
-  public function published()
+  public function published(): HasOne
   {
     return $this->hasOne(Published::class);
   }
 
-  public function tags()
+  public function tags(): BelongsToMany
   {
-    return $this->morphToMany(Tag::class, 'tags', 'article_tags');
+    return $this->belongsToMany(Tag::class, 'article_tags', 'tag_id', 'article_id')->withTimestamps();
   }
 
-	// public function viewCounter()
-	// {
-	// 	return $this->hasOne(ViewCounter::class);
-	// }
+  // public function tags(): BelongsTo
+  // {
+  //   return $this->belongsTo(Tag::class);
+  // }
+
+  // public function viewCounter()
+  // {
+  // 	return $this->hasOne(ViewCounter::class);
+  // }
 
 }

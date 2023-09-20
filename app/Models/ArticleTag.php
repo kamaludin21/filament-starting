@@ -8,10 +8,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ArticleTag extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $fillable = [
-      'tag_id',
-      'article_id'
+      'tag_id', 'article_id', 'created_at', 'updated_at'
     ];
 }

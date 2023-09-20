@@ -37,7 +37,7 @@ class ArticleCategoryResource extends Resource
               ->label('Nama Kategori')
               ->live(onBlur: true)
               ->afterStateUpdated(fn (Set $set, ?string $state) => $set('slug', Str::slug($state)))->placeholder('Nama Kategori')->required()->autocomplete(false),
-            TextInput::make('slug')->required(),
+            TextInput::make('slug')->readOnly()->required(),
             Textarea::make('description')->label('Keterangan')
           ])
       ]);
