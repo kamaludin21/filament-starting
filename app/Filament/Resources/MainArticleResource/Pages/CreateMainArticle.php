@@ -12,7 +12,7 @@ class CreateMainArticle extends CreateRecord
 
   protected function mutateFormDataBeforeCreate(array $data): array
   {
-    $data['stakeholder_id'] = 1;
+    $data['stakeholder_id'] = auth()->id();
     return $data;
   }
 }
