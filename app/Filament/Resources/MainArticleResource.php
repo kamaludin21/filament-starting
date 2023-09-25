@@ -27,6 +27,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Carbon\Carbon;
+use Filament\Infolists\Components\ImageEntry;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 
@@ -131,7 +132,6 @@ class MainArticleResource extends Resource
                     ->displayFormat('D d/m/Y')
                     ->label('Tanggal Publikasi')
                     ->closeOnDateSelection(),
-
                   Radio::make('edited_status')
                     ->required()
                     ->options([
@@ -193,6 +193,10 @@ class MainArticleResource extends Resource
           TabsTab::make('Informasi Artikel')->schema([
             TextEntry::make('title'),
             TextEntry::make('slug'),
+            TextEntry::make('tags.name')->badge(),
+            ImageEntry::make('thumbnail')->label('Thumbnail'),
+            TextEntry::make('thumbnail_alt')->label('Keterangan Thumbnail'),
+            ImageEntry::make('images')->label('Thumbnail'),
             TextEntry::make('content')->html(),
           ]),
           TabsTab::make('History')->schema([
