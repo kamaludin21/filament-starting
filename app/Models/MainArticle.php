@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -32,9 +33,9 @@ class MainArticle extends Model
     return $this->hasOne(Stakeholder::class);
   }
 
-  public function articleCategory(): HasOne
+  public function articleCategory(): BelongsTo
   {
-    return $this->hasOne(ArticleCategory::class);
+    return $this->belongsTo(ArticleCategory::class);
   }
 
   public function published(): HasOne
