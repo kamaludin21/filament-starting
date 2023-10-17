@@ -14,6 +14,9 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Filters\TrashedFilter;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class InstituteResource extends Resource
 {
@@ -44,20 +47,38 @@ class InstituteResource extends Resource
   {
     return $table
       ->columns([
-        TextColumn::make('name')->sortable(),
-        TextColumn::make('description')->wrap(),
-        TextColumn::make('created_at')->date()
+        TextColumn::make('name')
+          ->forceSearchCaseInsensitive()
+          ->label('Institusi')
+          ->sortable()
+          ->searchable(),
+        TextColumn::make('description')
+          ->label('Keterangan')
+          ->searchable()
+          ->wrap()
+          ->toggleable()
+          ->toggledHiddenByDefault(),
+        TextColumn::make('created_at')
+          ->label('Dibuat')
+          ->date()
+          ->toggleable()
       ])
       ->filters([
-        //
+        TrashedFilter::make(),
       ])
       ->actions([
         Tables\Actions\EditAction::make(),
+        Tables\Actions\DeleteAction::make()
       ])
       ->bulkActions([
         Tables\Actions\BulkActionGroup::make([
           Tables\Actions\DeleteBulkAction::make(),
         ]),
+      ])
+      ->groups([
+        Tables\Grouping\Group::make('created_at')
+          ->label('Order Date')
+          ->collapsible(),
       ])
       ->emptyStateActions([
         Tables\Actions\CreateAction::make(),
@@ -78,5 +99,10 @@ class InstituteResource extends Resource
       'create' => Pages\CreateInstitute::route('/create'),
       'edit' => Pages\EditInstitute::route('/{record}/edit'),
     ];
+  }
+
+  public static function getEloquentQuery(): Builder
+  {
+    return parent::getEloquentQuery()->withoutGlobalScope(SoftDeletingScope::class);
   }
 }

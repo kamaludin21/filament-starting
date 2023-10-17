@@ -15,6 +15,9 @@ use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Filters\TrashedFilter;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class TagResource extends Resource
 {
@@ -48,20 +51,37 @@ class TagResource extends Resource
   {
     return $table
       ->columns([
-        TextColumn::make('name')->sortable()->label('Tag'),
-        ToggleColumn::make('is_muted')->label('Is Mute'),
-        TextColumn::make('created_at')->date()
+        TextColumn::make('name')
+          ->forceSearchCaseInsensitive()
+          ->label('Tag')
+          ->sortable()
+          ->searchable(),
+        ToggleColumn::make('is_muted')
+          ->label('Disembunyikan')
+          ->toggleable()
+          ->toggledHiddenByDefault()
+          ->label('Is Mute'),
+        TextColumn::make('created_at')
+          ->label('Dibuat')
+          ->date()
+          ->toggleable()
       ])
       ->filters([
-        //
+        TrashedFilter::make()
       ])
       ->actions([
         Tables\Actions\EditAction::make(),
+        Tables\Actions\DeleteAction::make()
       ])
       ->bulkActions([
         Tables\Actions\BulkActionGroup::make([
           Tables\Actions\DeleteBulkAction::make(),
         ]),
+      ])
+      ->groups([
+        Tables\Grouping\Group::make('created_at')
+          ->label('Order Date')
+          ->collapsible(),
       ])
       ->emptyStateActions([
         Tables\Actions\CreateAction::make(),
@@ -82,5 +102,10 @@ class TagResource extends Resource
       'create' => Pages\CreateTag::route('/create'),
       'edit' => Pages\EditTag::route('/{record}/edit'),
     ];
+  }
+
+  public static function getEloquentQuery(): Builder
+  {
+    return parent::getEloquentQuery()->withoutGlobalScope(SoftDeletingScope::class);
   }
 }
