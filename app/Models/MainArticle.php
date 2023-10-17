@@ -35,7 +35,7 @@ class MainArticle extends Model
 
   public function articleCategory(): BelongsTo
   {
-    return $this->belongsTo(ArticleCategory::class);
+    return $this->belongsTo(ArticleCategory::class, 'article_category_id');
   }
 
   public function published(): HasOne
@@ -47,15 +47,5 @@ class MainArticle extends Model
   {
     return $this->belongsToMany(Tag::class, 'article_tags', 'tag_id', 'article_id')->withTimestamps();
   }
-
-  // public function tags(): BelongsTo
-  // {
-  //   return $this->belongsTo(Tag::class);
-  // }
-
-  // public function viewCounter()
-  // {
-  // 	return $this->hasOne(ViewCounter::class);
-  // }
 
 }

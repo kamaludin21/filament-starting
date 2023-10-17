@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\EditedStatus;
+use App\Enums\PublishStatus;
 use App\Filament\Resources\MainArticleResource\Pages;
 use App\Models\MainArticle;
 use App\Models\ArticleCategory;
@@ -24,17 +26,20 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Carbon\Carbon;
-use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Textarea;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\ViewEntry;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
 
 class MainArticleResource extends Resource
 {
   protected static ?string $model = MainArticle::class;
   protected static ?string $navigationGroup = 'Artikel';
-  protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+  protected static ?string $navigationIcon = 'heroicon-o-newspaper';
 
   public static function form(Form $form): Form
   {
@@ -44,30 +49,38 @@ class MainArticleResource extends Resource
           Section::make('Form Artikel')
             ->description('Formulir artikel berita utama')
             ->schema([
-              TextInput::make('title')
-                ->maxLength(256)
-                ->dehydrated()
-                ->required()
+              Textarea::make('title')
+                ->autosize()
                 ->label('Judul berita')
+                ->placeholder('Judul berita/artikel')
+                ->maxLength(256)
+                ->autocomplete(false)
+                ->required()
                 ->live(onBlur: true)
+                ->dehydrated()
                 ->afterStateUpdated(function (Set $set, ?string $state) {
                   $set('slug', Str::slug($state));
-                })->placeholder('Judul berita/artikel')
-                ->autocomplete(false)
+                })
                 ->columnSpanFull(),
+
               TextInput::make('slug')
-                ->required()
-                ->readOnly()
-                ->maxLength(270),
+                ->label('Slug')
+                ->placeholder('Slug')
+                ->maxLength(270)
+                ->disabled()
+                ->dehydrated()
+                ->readOnly(),
+
               Select::make('article_category_id')
+                ->label('Kategori Berita')
                 ->native('false')
                 ->required()
-                ->options(ArticleCategory::all()
-                  ->pluck('name', 'id')->map(function ($name) {
-                    return ucwords($name);
-                  }))
-                ->label('Kategori Berita'),
+                ->options(ArticleCategory::all()->pluck('name', 'id')->map(function ($name) {
+                  return ucwords($name);
+                })),
+
               Select::make('tags')
+                ->searchable()
                 ->label('Tags')
                 ->helperText('Max: 5 Tag')
                 ->multiple()
@@ -75,13 +88,15 @@ class MainArticleResource extends Resource
                 ->relationship('tags', 'name')
                 ->createOptionForm([
                   TextInput::make('name')
-                    ->unique()
-                    ->required()
                     ->label('Tag')
+                    ->placeholder('Tag')
+                    ->maxLength(30)
                     ->helperText('Max: 30 Karakter')
                     ->live(onBlur: true)
-                    ->afterStateUpdated(fn (Set $set, ?string $state) => $set('slug', Str::slug($state)))->placeholder('Tag')->autocomplete(false),
-                  TextInput::make('slug')->readOnly(),
+                    ->unique()
+                    ->afterStateUpdated(fn (Set $set, ?string $state) => $set('slug', Str::slug($state))),
+                  TextInput::make('slug')
+                    ->readOnly(),
                 ])
                 ->createOptionAction(function (Forms\Components\Actions\Action $action) {
                   return $action
@@ -89,29 +104,37 @@ class MainArticleResource extends Resource
                     ->modalWidth('lg');
                 })
                 ->columnSpanFull(),
+
               TextInput::make('thumbnail_alt')
-                ->required()
-                ->maxLength(100)
-                ->placeholder('Teks keterangan gambar')
                 ->label('Keterangan gambar')
-                ->helperText('Max: 100 Karakter')->columnSpanFull(),
-              FileUpload::make('thumbnail')
+                ->placeholder('Teks keterangan gambar')
+                ->maxLength(100)
+                ->helperText('Max: 100 Karakter')
                 ->required()
+                ->columnSpanFull(),
+
+              FileUpload::make('thumbnail')
+                ->label('Gambar')
                 ->image()
+                ->directory(date('Y') . '/' . date('m'))
+                ->required()
                 ->maxSize(1024)
-                ->label('Thumbnail')
                 ->helperText('Max Size: 1024KB'),
+
               FileUpload::make('images')
-                ->maxFiles(5)
+                ->label('Kumpulan Gambar')
                 ->image()
+                ->directory(date('Y') . '/' . date('m'))
+                ->maxFiles(5)
                 ->multiple()
                 ->reorderable()
-                ->label('Kumpulan Gambar Artikel')
                 ->helperText('Max: 5 File'),
+
               RichEditor::make('content')
-                ->required()
+                ->label('Kontent')
                 ->maxLength(5000)
-                ->label('Kontent')->columnSpanFull(),
+                ->required()
+                ->columnSpanFull()
             ])->columns(2),
 
         ])->columnSpan(['lg' => 2]),
@@ -120,47 +143,53 @@ class MainArticleResource extends Resource
             ->relationship('published')
             ->description('Atur Publikasi Artikel')
             ->schema([
-              DateTimePicker::make('publish_date')
-                ->label('Tanggal Publikasi')
-                ->required()
-                ->seconds(false)
-                ->native(false)
-                ->default(today())
-                ->minDate(function ($get) {
-                  return $get('publish_date') ?: today();
-                })
-                ->maxDate(function ($get) {
-                  $date = $get('publish_date') ? Carbon::parse($get('publish_date')) : Carbon::now();
-                  return $date->addDays(3);
-                })
-                ->displayFormat('D d/m/Y')
-                ->closeOnDateSelection(),
               Radio::make('edited_status')
-                ->required()
-                ->options([
-                  'drafted' => 'Draft',
-                  'completed' => 'Selesai',
-                  'archived' => 'Arsip',
-                ])
                 ->label('Status Edit')
-                ->default('drafted'),
+                ->required()
+                ->reactive()
+                ->default('drafted')
+                ->options(EditedStatus::class),
 
               Radio::make('publish_status')
+                ->label('Status Publikasi')
+                ->hidden(function ($get) {
+                  if ($get('edited_status') !== 'completed') {
+                    return true;
+                  }
+                  return false;
+                })
                 ->required()
-                ->options([
-                  'queue' => 'Antrian',
-                  'preview' => 'Preview',
-                  'hold' => 'Tahan',
-                  'publish' => 'Publish'
-                ])
+                ->reactive()
+                ->default('queue')
+                ->options(PublishStatus::class)
                 ->descriptions([
                   'queue' => 'Artikel dalam antrian',
                   'preview' => 'Artikel sedang di review',
                   'hold' => 'Artikel ditahan sementara',
                   'publish' => 'Artikel di publish'
-                ])
-                ->label('Status Publikasi')
-                ->default('queue'),
+                ]),
+
+              DatePicker::make('publish_date')
+                ->label('Tanggal Publikasi')
+                ->visible(function ($get) {
+                  if ($get('publish_status') === 'publish') {
+                    return true;
+                  }
+                  return false;
+                })
+                ->required()
+                ->minDate(function ($get) {
+                  return $get('publish_date') ?: today();
+                })
+                ->maxDate(function ($get) {
+                  $date = $get('publish_date') ? Carbon::parse($get('publish_date')) : Carbon::now();
+                  return $date->addDays(5);
+                })
+                ->reactive()
+                ->seconds(false)
+                ->native(false)
+                ->displayFormat('D d/m/Y')
+                ->closeOnDateSelection(),
             ])
             ->mutateRelationshipDataBeforeCreateUsing(function (array $data, Model $record): array {
               $tags = $record->tags->pluck('name')->filter();
@@ -194,17 +223,18 @@ class MainArticleResource extends Resource
             TextEntry::make('tags.name')->badge(),
             TextEntry::make('title')->label('Judul Artikel'),
             TextEntry::make('slug')->label('Slug Artikel'),
-            ImageEntry::make('thumbnail')->label('Gambar Cover'),
-            TextEntry::make('thumbnail_alt')->label('Keterangan Gambar Thumbnail'),
+            ImageEntry::make('thumbnail')->label('Gambar'),
+            TextEntry::make('thumbnail_alt')->label('Keterangan Gambar'),
             ImageEntry::make('images')->label('Kumpulan Gambar')->columnSpanFull(),
             TextEntry::make('content')->html()->label('Konten')->columnSpanFull(),
           ])->columns(2),
           TabsTab::make('published')->label('Publikasi')->schema([
             TextEntry::make('published.edited_status')->label('Status Pengeditan')->badge(),
             TextEntry::make('published.publish_status')->label('Status Publikasi')->badge(),
-            TextEntry::make('published.publish_date')->label('Tanggal Publikasi'),
+            TextEntry::make('created_at')->label('Tanggal Buat')->dateTime(),
+            TextEntry::make('published.publish_date')->label('Tanggal Publikasi')->dateTime(),
             ViewEntry::make('published.edited_history')->view('livewire.collapsible-card')->columnSpanFull(),
-          ])->columns(3),
+          ])->columns(2),
 
           TabsTab::make('Author')->schema([
             TextEntry::make('users.name')->label('Nama'),
@@ -223,24 +253,75 @@ class MainArticleResource extends Resource
   {
     return $table
       ->columns([
-        TextColumn::make('title')->sortable()->label('Judul Artikel')->wrap(),
-      ])
-      ->filters([
-        //
-      ])
+        TextColumn::make('title')
+          ->searchable()
+          ->forceSearchCaseInsensitive()
+          ->label('Judul Artikel')
+          ->sortable()
+          ->wrap(),
 
+        TextColumn::make('articleCategory.name')
+          ->label('Kategori')
+          ->sortable()
+          ->wrap()
+          ->toggleable(),
+        TextColumn::make('published.publish_status')
+          ->label('Status')
+          ->placeholder('Kosong')
+          ->sortable()
+          ->wrap()
+          ->badge()
+          ->toggleable()
+          ->toggledHiddenByDefault(),
+
+        TextColumn::make('published.publish_date')
+          ->label('Tanggal Publikasi')
+          ->placeholder('Kosong')
+          ->date()
+          ->sortable()
+          ->wrap()
+          ->toggleable()
+          ->toggledHiddenByDefault(),
+
+        TextColumn::make('created_at')
+          ->label('Dibuat pada')
+          ->placeholder('Kosong')
+          ->date()
+          ->sortable()
+          ->wrap()
+          ->toggleable()
+          ->toggledHiddenByDefault(),
+      ])
+      ->defaultSort('created_at', 'desc')
+      ->filters([
+        Tables\Filters\SelectFilter::make('articleCategory')
+          ->label('Kategori')
+          ->relationship('articleCategory', 'name')
+          ->multiple()
+          ->preload(),
+
+        Tables\Filters\TrashedFilter::make(),
+      ])
       ->actions([
-        Tables\Actions\ViewAction::make(),
-        Tables\Actions\EditAction::make(),
-        Tables\Actions\DeleteAction::make(),
+        Tables\Actions\ActionGroup::make([
+          Tables\Actions\ViewAction::make(),
+          Tables\Actions\EditAction::make(),
+          Tables\Actions\DeleteAction::make(),
+        ]),
       ])
       ->bulkActions([
         Tables\Actions\BulkActionGroup::make([
           Tables\Actions\DeleteBulkAction::make(),
+          Tables\Actions\ForceDeleteBulkAction::make(),
+          Tables\Actions\RestoreBulkAction::make()
         ]),
       ])
+      ->groups([
+        Tables\Grouping\Group::make('created_at')
+          ->label('Order Date')
+          ->collapsible(),
+      ])
       ->emptyStateActions([
-
         Tables\Actions\CreateAction::make(),
       ]);
   }
@@ -260,5 +341,10 @@ class MainArticleResource extends Resource
       'edit' => Pages\EditMainArticle::route('/{record}/edit'),
       'view' => Pages\ViewMainArticle::route('/{record}')
     ];
+  }
+
+  public static function getEloquentQuery(): Builder
+  {
+    return parent::getEloquentQuery()->withoutGlobalScope(SoftDeletingScope::class);
   }
 }

@@ -8,5 +8,14 @@ use Filament\Resources\Pages\ViewRecord;
 
 class ViewMainArticle extends ViewRecord
 {
-    protected static string $resource = MainArticleResource::class;
+  protected static string $resource = MainArticleResource::class;
+
+  protected function getHeaderActions(): array
+  {
+    return [
+      Actions\EditAction::make(),
+      Actions\ForceDeleteAction::make(),
+      Actions\RestoreAction::make(),
+    ];
+  }
 }
