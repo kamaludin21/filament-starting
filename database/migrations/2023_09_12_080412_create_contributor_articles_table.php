@@ -34,7 +34,8 @@ return new class extends Migration
         'completed',
         'published',
         'archived'
-      ]);
+      ])->default('drafted');
+      $table->timestamp('publish_date')->nullable();
       $table->timestamps();
       $table->softDeletes();
     });
