@@ -18,7 +18,7 @@ return new class extends Migration
       $table->foreignIdFor(Stakeholder::class)
         ->constrained();
       $table->foreignIdFor(MainArticle::class)
-        ->constrained();
+        ->constrained()->cascadeOnDelete();
       $table->enum('publish_status', [
         'queue',
         'preview',
@@ -28,9 +28,8 @@ return new class extends Migration
       $table->timestamp('publish_date')->nullable();
       $table->enum('edited_status', [
         'drafted',
-        'completed',
-        'archived'
-      ]);
+        'completed'
+      ])->default('drafted');
       $table->json('edited_history');
       $table->timestamps();
       $table->softDeletes();
