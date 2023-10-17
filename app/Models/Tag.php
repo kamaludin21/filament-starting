@@ -20,4 +20,9 @@ class Tag extends Model
   {
     return $this->belongsToMany(MainArticle::class, 'article_tags', 'tag_id', 'article_id');
   }
+
+  public function contributorArticle(): BelongsToMany
+  {
+    return $this->belongsToMany(MainArticle::class, 'article_tags', 'tag_id', 'article_id');
+  }
 }
