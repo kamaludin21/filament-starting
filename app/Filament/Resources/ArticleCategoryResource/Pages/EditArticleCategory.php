@@ -8,12 +8,14 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditArticleCategory extends EditRecord
 {
-    protected static string $resource = ArticleCategoryResource::class;
+  protected static string $resource = ArticleCategoryResource::class;
 
-    protected function getHeaderActions(): array
-    {
-        return [
-            Actions\DeleteAction::make(),
-        ];
-    }
+  protected function getHeaderActions(): array
+  {
+    return [
+      Actions\DeleteAction::make(),
+      Actions\RestoreAction::make(),
+      Actions\ForceDeleteAction::make(),
+    ];
+  }
 }
